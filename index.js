@@ -40,6 +40,14 @@ async function run() {
             const result = await rooms.find().toArray();
             resp.send(result);
         });
+        //get featured rooms
+        app.get('/featured-rooms', async (req, resp) => {
+            const query = { "discount": { $gt: 0 } };
+            const result = await rooms.find(query).toArray();
+            console.log(result);
+            resp.send(result);
+
+        });
 
 
         // Send a ping to confirm a successful connection

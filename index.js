@@ -32,11 +32,14 @@ async function run() {
         // await client.connect();
 
         //my db collections
-        
+        const rooms = client.db("stars-hotel").collection("rooms");
         
 
-        //all featured-rooms
-        
+        //all rooms
+        app.get('/rooms', async (req, resp) => {
+            const result = await rooms.find().toArray();
+            resp.send(result);
+        });
 
 
         // Send a ping to confirm a successful connection

@@ -76,6 +76,13 @@ async function run() {
             const result = await bookings.find(query).toArray();
             resp.send(result);
         });
+        //delete a booking
+        app.delete('/bookings/:id', async (req, resp) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await bookings.deleteOne(query);
+            resp.send(result);
+        });
 
 
         // Send a ping to confirm a successful connection

@@ -33,7 +33,8 @@ async function run() {
 
         //my db collections
         const rooms = client.db("stars-hotel").collection("rooms");
-        
+        const bookings = client.db("stars-hotel").collection("bookings");
+
 
         //all rooms
         app.get('/rooms', async (req, resp) => {
@@ -56,7 +57,16 @@ async function run() {
         app.get('/rooms/:id', async (req, resp) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
-            const result = await rooms.find(query).toArray();
+            const result = await rooms.findOne(query);
+            resp.send(result);
+        });
+        //all bookings
+        app.get('/bookings', async (req, resp) => {
+
+            let query = {};
+            if (req.query.email) query = { email: req.query.email };
+
+            const result = await bookings.find(query).toArray();
             resp.send(result);
         });
 
@@ -77,6 +87,6 @@ app.get('/', (req, resp) => {
 });
 
 //server response
-app.listen(port, ()=>{
+app.listen(port, () => {
     console.log("Hotel is running on port:", port);
 });

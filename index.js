@@ -13,7 +13,7 @@ const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster
 
 
 //middleware
-app.use(express());
+app.use(express.json());
 app.use(cors());
 //custom middleware
 
@@ -53,14 +53,21 @@ async function run() {
             const result = await rooms.find(query).toArray();
             resp.send(result);
         });
-        //get a specific rooms
+        //get a specific room
         app.get('/rooms/:id', async (req, resp) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const result = await rooms.findOne(query);
             resp.send(result);
         });
-        //all bookings
+        //post a booking
+        app.post('/bookings', async (req, resp) => {
+            const booking = req.body;
+            console.log(booking);
+            const result = await bookings.insertOne(booking);
+            resp.send(result);
+        });
+        //bookings of an user
         app.get('/bookings', async (req, resp) => {
 
             let query = {};

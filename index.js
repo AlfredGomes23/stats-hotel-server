@@ -6,7 +6,7 @@ const app = express();
 require('dotenv').config();
 
 //db
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.by2eb1n.mongodb.net/?retryWrites=true&w=majority`;
@@ -45,14 +45,19 @@ async function run() {
             const query = { "discount": { $gt: 0 } };
             const result = await rooms.find(query).toArray();
             resp.send(result);
-
         });
         //get featured rooms
         app.get('/featured', async (req, resp) => {
             const query = { "featured": { $eq: true } };
             const result = await rooms.find(query).toArray();
             resp.send(result);
-
+        });
+        //get a specific rooms
+        app.get('/rooms/:id', async (req, resp) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await rooms.find(query).toArray();
+            resp.send(result);
         });
 
 

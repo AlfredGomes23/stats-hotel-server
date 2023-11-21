@@ -14,7 +14,10 @@ const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster
 
 //middleware
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+    origin: ['http://localhost:5173'],
+    credentials: true
+}));
 //custom middleware
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -63,8 +66,14 @@ async function run() {
         //post a booking
         app.post('/bookings', async (req, resp) => {
             const booking = req.body;
-            console.log(booking);
-            const result = await bookings.insertOne(booking);
+            //check room available or not
+            const { roomId, date } = booking;
+            //get previous bookings for same room
+            const booked = await bookings.find({ roomId: roomId }).toArray();
+            //checking the date same or not
+            const res = await booked.find(booking => booking.date === date);
+            // console.log(res ? 'unavailable' : "available");
+            const result = res ? { unavailable : true} : await bookings.insertOne(booking);
             resp.send(result);
         });
         //bookings of an user
@@ -83,7 +92,6 @@ async function run() {
             const result = await bookings.deleteOne(query);
             resp.send(result);
         });
-
 
         // Send a ping to confirm a successful connection
         // await client.db("admin").command({ ping: 1 });

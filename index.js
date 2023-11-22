@@ -66,14 +66,16 @@ async function run() {
         //post a booking
         app.post('/bookings', async (req, resp) => {
             const booking = req.body;
-            //check room available or not
             const { roomId, date } = booking;
-            //get previous bookings for same room
+
+            //checking room available or not
+            //get all bookings for same room
             const booked = await bookings.find({ roomId: roomId }).toArray();
             //checking the date same or not
             const res = await booked.find(booking => booking.date === date);
+
             // console.log(res ? 'unavailable' : "available");
-            const result = res ? { unavailable : true} : await bookings.insertOne(booking);
+            const result = res ? { unavailable: true } : await bookings.insertOne(booking);
             resp.send(result);
         });
         //bookings of an user
@@ -83,6 +85,35 @@ async function run() {
             if (req.query.email) query = { email: req.query.email };
 
             const result = await bookings.find(query).toArray();
+            resp.send(result);
+        });
+        //get a booking by id
+        app.get('/booking/:id', async (req, resp) => {
+            const { id } = req.params;
+            const result = await bookings.findOne({ _id: new ObjectId(id) });
+            resp.send(result);
+        });
+        //update a booking
+        app.patch('/update/:id', async (req, resp) => {
+            const b_id = req.params.id;
+            const { newDate, roomId } = req.body;
+
+            //get all bookings for same room/roomId
+            const booked = await bookings.find({ roomId: roomId }).toArray();
+            //checking the date same or not
+            const res = await booked.find(booking => booking.date === newDate);
+
+            //res ? no : update
+            if (res) return resp.send({ unavailable: true });
+
+            //update
+            const query = { _id: new ObjectId(b_id) };
+            const newDoc = {
+                $set: {
+                    date: newDate
+                }
+            };
+            const result = await bookings.updateOne(query, newDoc);
             resp.send(result);
         });
         //delete a booking

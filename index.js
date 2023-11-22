@@ -42,8 +42,8 @@ async function run() {
         const verifyToken = async (req, resp, next) => {
             // get token
             const token = req?.headers?.authorization?.split(" ")[1];
-            if (!token) return resp.status(401).send({ message: "unauthorize access" });
             // console.log(1,token);
+            if (!token) return resp.status(401).send({ message: "unauthorize access" });
             //verify token
             jwt.verify(token, process.env.ACCESS_SECRET, (error, decoded) => {
 
@@ -51,7 +51,7 @@ async function run() {
                 if (error) return resp.status(401).send({ message: "unauthorize access" });
                 req.decoded = decoded;
                 // console.log(decoded);
-                next(); 
+                next();
             });
         };
         //jwt
@@ -88,7 +88,7 @@ async function run() {
             resp.send(result);
         });
         //post a booking
-        app.post('/bookings', async (req, resp) => {
+        app.post('/bookings', verifyToken, async (req, resp) => {
             const booking = req.body;
             const { roomId, date } = booking;
 
@@ -119,7 +119,7 @@ async function run() {
             resp.send(result);
         });
         //update a booking
-        app.patch('/update/:id', async (req, resp) => {
+        app.patch('/update/:id', verifyToken, async (req, resp) => {
             const b_id = req.params.id;
             const { newDate, roomId } = req.body;
 
@@ -142,7 +142,7 @@ async function run() {
             resp.send(result);
         });
         //delete a booking
-        app.delete('/bookings/:id', async (req, resp) => {
+        app.delete('/bookings/:id', verifyToken, async (req, resp) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const result = await bookings.deleteOne(query);

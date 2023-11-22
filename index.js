@@ -43,11 +43,12 @@ async function run() {
             // get token
             const token = req?.headers?.authorization?.split(" ")[1];
             // console.log(1,token);
+
             if (!token) return resp.status(401).send({ message: "unauthorize access" });
             //verify token
             jwt.verify(token, process.env.ACCESS_SECRET, (error, decoded) => {
-
                 // console.log(2, token);
+
                 if (error) return resp.status(401).send({ message: "unauthorize access" });
                 req.decoded = decoded;
                 // console.log(decoded);
@@ -123,6 +124,12 @@ async function run() {
             const b_id = req.params.id;
             const { newDate, roomId } = req.body;
 
+            const query = { _id: new ObjectId(b_id) };
+            const { email } = await bookings.findOne(query);
+            console.log(email);
+
+            if (req?.decoded?.email !== email) return resp.status(403).send({ message: "forbidden access" });
+
             //get all bookings for same room/roomId
             const booked = await bookings.find({ roomId: roomId }).toArray();
             //checking the date same or not
@@ -132,7 +139,6 @@ async function run() {
             if (res) return resp.send({ unavailable: true });
 
             //update
-            const query = { _id: new ObjectId(b_id) };
             const newDoc = {
                 $set: {
                     date: newDate
@@ -146,6 +152,26 @@ async function run() {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const result = await bookings.deleteOne(query);
+            resp.send(result);
+        });
+        //post a review
+        app.post('/review/:id', async (req, resp) => {
+            const id = req.params.id;
+            const newReview = req.body;
+            const query = { _id: new ObjectId(id) }
+
+            const { reviews } = await rooms.findOne(query);
+            // console.log(newReview, reviews);
+            await reviews.push(newReview);
+            console.log(reviews);
+            //update
+            const newDoc = {
+                $set:{
+                    reviews:reviews
+                }
+            };
+            const result = await rooms.updateOne(query, newDoc);
+            console.log(result);
             resp.send(result);
         });
 

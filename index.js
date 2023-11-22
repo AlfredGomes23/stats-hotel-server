@@ -1,12 +1,12 @@
 const express = require('express');
 const cors = require('cors');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');//db
 const port = process.env.PORT || 5000;
 const app = express();
-//dotenv
-require('dotenv').config();
+const jwt = require('jsonwebtoken');//jwt
+const cookieParser = require('cookie-parser');//cookie parser
+require('dotenv').config();//dotenv
 
-//db
-const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.by2eb1n.mongodb.net/?retryWrites=true&w=majority`;
@@ -14,11 +14,11 @@ const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster
 
 //middleware
 app.use(express.json());
+app.use(cookieParser());
 app.use(cors({
     origin: ['http://localhost:5173'],
     credentials: true
 }));
-//custom middleware
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -37,6 +37,30 @@ async function run() {
         //my db collections
         const rooms = client.db("stars-hotel").collection("rooms");
         const bookings = client.db("stars-hotel").collection("bookings");
+
+        //custom middleware
+        const verifyToken = async (req, resp, next) => {
+            // get token
+            const token = req?.headers?.authorization?.split(" ")[1];
+            if (!token) return resp.status(401).send({ message: "unauthorize access" });
+            // console.log(1,token);
+            //verify token
+            jwt.verify(token, process.env.ACCESS_SECRET, (error, decoded) => {
+
+                // console.log(2, token);
+                if (error) return resp.status(401).send({ message: "unauthorize access" });
+                req.decoded = decoded;
+                // console.log(decoded);
+                next(); 
+            });
+        };
+        //jwt
+        app.post('/jwt', async (req, resp) => {
+            const user = req.body;
+            const token = await jwt.sign(user, process.env.ACCESS_SECRET, { expiresIn: '1h' });
+            // console.log(0, token);
+            resp.send({ token });
+        });
 
 
         //all rooms
@@ -79,8 +103,9 @@ async function run() {
             resp.send(result);
         });
         //bookings of an user
-        app.get('/bookings', async (req, resp) => {
-
+        app.get('/bookings', verifyToken, async (req, resp) => {
+            // console.log(req?.decoded?.email, req?.query?.email);
+            if (req?.decoded?.email !== req?.query?.email) return resp.status(403).send({ message: "forbidden access" });
             let query = {};
             if (req.query.email) query = { email: req.query.email };
 

@@ -114,7 +114,7 @@ async function run() {
             resp.send(result);
         });
         //get a booking by id
-        app.get('/booking/:id', async (req, resp) => {
+        app.get('/booking/:id', verifyToken, async (req, resp) => {
             const { id } = req.params;
             const result = await bookings.findOne({ _id: new ObjectId(id) });
             resp.send(result);
@@ -155,8 +155,9 @@ async function run() {
             resp.send(result);
         });
         //check if booked
-        app.get('/isBooked', async (req, resp) => {
+        app.get('/isBooked', verifyToken, async (req, resp) => {
             const { roomId, email } = req.query;
+            if (req?.decoded?.email !== email) return resp.status(403).send({ message: "forbidden access" });
             //get all booking of the user
             const userBookings = await bookings.find({ email:email }).toArray();
             //check roomId in the user bookings
@@ -189,7 +190,7 @@ async function run() {
 
         // Send a ping to confirm a successful connection
         // await client.db("admin").command({ ping: 1 });
-        console.log("Pinged your deployment. You successfully connected to MongoDB!");
+        // console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
         // Ensures that the client will close when you finish/error
         // await client.close();

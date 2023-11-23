@@ -154,8 +154,20 @@ async function run() {
             const result = await bookings.deleteOne(query);
             resp.send(result);
         });
+        //check if booked
+        app.get('/isBooked', async (req, resp) => {
+            const { roomId, email } = req.query;
+            //get all booking of the user
+            const userBookings = await bookings.find({ email:email }).toArray();
+            //check roomId in the user bookings
+            if(userBookings.length){
+                const res = await userBookings.find( booking=> booking.roomId === roomId);
+                if(res) return resp.send({isBooked: true});
+            }
+            resp.send({isBooked: false});
+        });
         //post a review
-        app.post('/review/:id', async (req, resp) => {
+        app.post('/review/:id', verifyToken, async (req, resp) => {
             const id = req.params.id;
             const newReview = req.body;
             const query = { _id: new ObjectId(id) }
@@ -163,15 +175,15 @@ async function run() {
             const { reviews } = await rooms.findOne(query);
             // console.log(newReview, reviews);
             await reviews.push(newReview);
-            console.log(reviews);
+            // console.log(reviews);
             //update
             const newDoc = {
-                $set:{
-                    reviews:reviews
+                $set: {
+                    reviews: reviews
                 }
             };
             const result = await rooms.updateOne(query, newDoc);
-            console.log(result);
+            // console.log(result);
             resp.send(result);
         });
 

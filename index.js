@@ -16,7 +16,7 @@ const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
-    origin: ['http://localhost:5173'],
+    origin: ['http://localhost:5173', 'https://stars-hotel.web.app', 'https://stars-hotel.firebaseapp.com', 'https://vocal-begonia-dad2f7.netlify.app/'],
     credentials: true
 }));
 
@@ -42,13 +42,13 @@ async function run() {
         const verifyToken = async (req, resp, next) => {
             // get token
             const token = req?.headers?.authorization?.split(" ")[1];
+            
             // console.log(1,token);
-
             if (!token) return resp.status(401).send({ message: "unauthorize access" });
             //verify token
             jwt.verify(token, process.env.ACCESS_SECRET, (error, decoded) => {
+                
                 // console.log(2, token);
-
                 if (error) return resp.status(401).send({ message: "unauthorize access" });
                 req.decoded = decoded;
                 // console.log(decoded);
@@ -155,9 +155,8 @@ async function run() {
             resp.send(result);
         });
         //check if booked
-        app.get('/isBooked', verifyToken, async (req, resp) => {
+        app.get('/isBooked', async (req, resp) => {
             const { roomId, email } = req.query;
-            if (req?.decoded?.email !== email) return resp.status(403).send({ message: "forbidden access" });
             //get all booking of the user
             const userBookings = await bookings.find({ email:email }).toArray();
             //check roomId in the user bookings
